@@ -4,10 +4,42 @@ Generate, execute and evaluate changes to an agent's task code and its improveme
 procedure. RSI Engine is a standalone Python SDK and CLI with explicit interfaces
 for future evaluation and operations products.
 
-**Status:** working research prototype. The included demonstration uses scripted
-source replacements and synthetic workflows. It verifies execution, selection,
-rejection, and evidence collection. It does **not** demonstrate learned recursive
-improvement, model superiority, or production readiness.
+**Status:** working research prototype with a bounded Bedrock generator and a
+registered comparison of frozen and editable improvers. The original `demo` uses
+scripted source replacements. All supplied workflows are synthetic. Running the
+engine does not establish recursive advantage or production readiness.
+
+## Run the model comparison
+
+The pilot asks whether spending one of four model calls on improving the
+improvement procedure helps more than spending all four calls on task code.
+Both arms start from identical modules and receive development feedback and
+history. Three paired blocks alternate arm order.
+
+```sh
+uv sync --locked --extra bedrock
+uv run --locked rsi-engine init local/composed --domain composed
+uv run --locked rsi-engine study-prepare \
+  --pack local/composed --study runs/sonnet-pilot \
+  --bedrock-config examples/bedrock-sonnet-pilot.json
+uv run --locked rsi-engine study-run \
+  --pack local/composed --study runs/sonnet-pilot
+uv run --locked rsi-engine study-evaluate \
+  --pack local/composed --study runs/sonnet-pilot
+```
+
+`study-run` makes paid requests using the operator's AWS credential chain. The
+example allows at most 24 inference calls and $3 in estimated token cost across
+the study. Each call reserves its maximum token cost first. Unknown request
+outcomes retain that reservation; the adapter does not retry automatically.
+An interrupted study cannot restart and silently reset its spending counter.
+
+The protocol records source, corpus and Docker identities before search. All six
+selections must be committed before final cases are opened. The corpus has 12
+development cases, 10 validation cases, and 56 final cases from 28 distinct fault
+compositions. Final subscription and AI-job variants share those compositions.
+This is a small synthetic pilot with a separately implemented host grader, not
+an independently authored external benchmark. See [pilot design](docs/PILOT.md).
 
 ## Run the first example
 
@@ -72,7 +104,7 @@ produces better future improvements; that needs the controlled experiment in
 
 ## Connect a generator
 
-The first integration is a model-neutral command bridge. Supply a trusted host
+The model-neutral integration is a command bridge. Supply a trusted host
 program that reads one JSON request from stdin and writes one JSON response line.
 It can call your chosen model provider. No model credentials are required for the
 scripted demo, and no provider is invoked by tests.
@@ -102,15 +134,15 @@ arguments or source. Candidate code cannot choose the command or its environment
 See [Generator protocol](docs/INTERFACES.md) for the full request and response.
 
 The engine bounds calls, case evaluations, action steps, response bytes, and
-execution time. A provider bridge must enforce its own provider token and spending
-limits. Unknown usage remains unknown; reported provider cost is not independently
-verified. The engine does not currently enforce a dollar ceiling.
+execution time. A command bridge must enforce its own provider token and spending
+limits. The native Bedrock adapter also enforces token limits and an estimated
+dollar ceiling. Unknown usage remains unknown; estimates are not billing records.
 
 ## Integration direction
 
 `rsi_engine.contracts` defines `Generator`, `Runner`, and `Workload` protocols.
 The SDK's `search()` and `evaluate_final()` functions accept these implementations
-directly. The supplied CLI registers the synthetic adapter only; arbitrary modules
+directly. The supplied CLI registers the two synthetic adapters; arbitrary modules
 are never imported from a workload pack.
 
 `rsi-engine export` produces `rsi-engine.evidence.v1`, a standalone JSON bundle.

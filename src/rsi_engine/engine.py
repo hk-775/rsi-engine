@@ -12,6 +12,7 @@ from .archive import Archive, audit
 from .budget import Budget, Limits
 from .contracts import Candidate, EngineError, Generated, Usage, digest, exact, text
 from .workload import Pack, disjoint
+from .policy import SearchPolicy, compact_report
 
 
 def kernel_identity():
@@ -34,15 +35,19 @@ def eligible(report):
                 or report["false_completions"] or report["candidate_errors"])
 
 
-def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | None = None):
+def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | None = None,
+           policy: SearchPolicy | None = None):
     if workload.identity.get("adapter") != pack.manifest["adapter"]:
         raise EngineError("Workload adapter does not match the pack")
     budget = Budget(limits or Limits())
+    policy = policy or SearchPolicy()
     archive = Archive(out)
     manifest = {
         "schema_version": 1, "engine_version": __version__, "kernel_id": kernel_identity(),
         "pack_id": pack.id, "pack": pack.manifest,
         "generator": {"identity": generator.identity, "provenance": generator.provenance},
+        "generator_settings": getattr(generator, "settings", None),
+        "search_policy": asdict(policy),
         "runner": runner.identity, "workload": workload.identity,
         "limits": asdict(budget.limits),
         "selection_rule": "eligible maximum validation correctness, then fewer tool calls, then earliest revision",
@@ -60,15 +65,27 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
         candidates = [(active, active_artifact)]
         seen = {active.id}
         active_report = initial_report
+        history = []
         for iteration in range(budget.limits.proposals):
-            context = {"iteration": iteration, "development": active_report,
-                       "contract": workload.contract}
+            feedback = compact_report(active_report) if policy.compact else active_report
+            requested_target = policy.target(iteration)
+            context = {"iteration": iteration, "development": feedback, "contract": workload.contract}
+            if policy.history:
+                context["history"] = list(history)
+            if requested_target:
+                context["requested_target"] = requested_target
             try:
                 instruction = plan(active, context, runner, budget)
+                if requested_target and instruction["target"] != requested_target:
+                    raise EngineError("Improver plan violates the registered edit schedule")
+                archive.event("improvement_plan_executed", {
+                    "iteration": iteration, "candidate_id": active.id, "plan": instruction,
+                    "edited_improver": active.improver != pack.seed.improver,
+                })
                 request = {
                     "schema_version": 1, "iteration": iteration,
                     "parent_id": active.id, "candidate": asdict(active),
-                    "plan": instruction, "development": active_report,
+                    "plan": instruction, "development": feedback,
                     "contract": workload.contract,
                     "allowed_targets": ["task", "improver"],
                     "response_contract": {
@@ -78,10 +95,18 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
                                   "estimated_usd": "Decimal string or null"},
                     },
                 }
+                if policy.history:
+                    request["history"] = list(history)
                 request_artifact = archive.put("generation_request", request)
                 budget.reserve_proposal()
                 started = time.monotonic()
-                raw = generator.generate(request, timeout=budget.remaining())
+                try:
+                    raw = generator.generate(request, timeout=budget.remaining())
+                finally:
+                    evidence = getattr(generator, "last_call", None)
+                    if evidence is not None:
+                        evidence_id = archive.put("provider_call", evidence)
+                        archive.event("provider_call_recorded", {"iteration": iteration, "artifact": evidence_id})
                 response_artifact = archive.put("generation_response", raw)
                 archive.event("generator_returned", {
                     "iteration": iteration, "request": request_artifact,
@@ -103,11 +128,18 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
                 })
                 if child.id in seen:
                     archive.event("duplicate_candidate", {"candidate_id": child.id})
+                    history.append({"iteration": iteration, "target": generated.proposal.target,
+                                    "hypothesis": generated.proposal.hypothesis, "decision": "duplicate"})
                     continue
                 seen.add(child.id)
                 # An edited improver must actually execute and produce a valid plan.
                 if generated.proposal.target == "improver":
-                    probe = plan(child, {**context, "iteration": iteration + 1}, runner, budget)
+                    probe_context = {**context, "iteration": iteration + 1}
+                    if requested_target:
+                        probe_context["requested_target"] = policy.target(iteration + 1)
+                    probe = plan(child, probe_context, runner, budget)
+                    if requested_target and probe["target"] != probe_context["requested_target"]:
+                        raise EngineError("Edited improver violates the next scheduled target")
                     archive.event("improver_executed", {"candidate_id": child.id, "plan": probe})
                 report = workload.evaluate(child, development, runner, budget)
                 report_artifact = archive.put("development_report", report)
@@ -118,6 +150,10 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
                     "decision": "retain_for_exploration" if retained else "reject_as_parent",
                     "recursive_benefit_established": False,
                 })
+                history.append({"iteration": iteration, "target": generated.proposal.target,
+                                "hypothesis": generated.proposal.hypothesis,
+                                "correct": report["correct"], "case_count": report["case_count"],
+                                "decision": "retain_for_exploration" if retained else "reject_as_parent"})
                 if retained:
                     active, active_report = child, report
             except EngineError as exc:
@@ -125,6 +161,7 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
                 if isinstance(exc, BudgetExceeded):
                     raise
                 archive.event("proposal_failed", {"iteration": iteration, "reason": str(exc)})
+                history.append({"iteration": iteration, "decision": "failed", "reason": str(exc)})
 
         # Validation feedback is never provided to the generator or improver.
         validation = pack.cases("validation")

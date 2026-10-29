@@ -93,3 +93,39 @@ def test_exhausted_budget_never_creates_a_final_selection(tmp_path, runner):
                Limits(proposals=1, case_evaluations=1))
     assert not (run / "selection.json").exists()
     assert audit(run)["events"][-1]["kind"] == "run_aborted"
+
+
+def test_composed_search_executes_edited_improver_with_history(tmp_path, runner):
+    from rsi_engine.composed import ComposedWorkload, open_pack, write_pack as write_composed
+    from rsi_engine.policy import SearchPolicy
+    pack = open_pack(write_composed(tmp_path / "pack"))
+    task = '''def decide(c):
+    if c["stage"] == 2: return {"action": "complete"}
+    if c["confirmed"]: return {"action": "next"}
+    if c["last_status"] == "unauthorized": return {"action": "handoff"}
+    if c["last_status"] == "unavailable" and c["attempts"] >= 3: return {"action": "handoff"}
+    if c["last_status"] == "stale_version": return {"action": "refresh"}
+    return {"action": "submit", **{k: c[k] for k in ("stage", "version", "operation_key", "payload")}}
+'''
+    improver = '''def plan(c):
+    return {"target": c["requested_target"], "instruction": "Use bounded retries. History: " + str(len(c["history"]))}
+'''
+    class Generator:
+        identity = "synthetic-composed-fixture"
+        provenance = "scripted_fixture"
+        def generate(self, request, timeout):
+            assert "history" in request
+            assert request["plan"]["target"] == ("improver" if request["iteration"] == 0 else "task")
+            return {"proposal": {"target": request["plan"]["target"],
+                                 "source": improver if request["iteration"] == 0 else task,
+                                 "hypothesis": "scripted fixture, not learned"},
+                    "usage": {"input_tokens": None, "output_tokens": None, "estimated_usd": None}}
+    result = search(pack, Generator(), runner, ComposedWorkload(), tmp_path / "run",
+                    Limits(2, 66, 600, 24), SearchPolicy("evolving_history", (0,), True, True))
+    assert result["summary"]["correct"] == 10
+    verified = audit(tmp_path / "run")
+    assert any(e["kind"] == "improvement_plan_executed" and e["data"]["edited_improver"]
+               and e["data"]["plan"]["instruction"].endswith("1") for e in verified["events"])
+    final = evaluate_final(tmp_path / "run", pack, runner, ComposedWorkload(), tmp_path / "final",
+                           Limits(1, 56, 600, 24))
+    assert final["report"]["correct"] == 56
