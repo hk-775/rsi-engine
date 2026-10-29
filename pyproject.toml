@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools==83.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rsi-engine"
+version = "0.1.0"
+description = "Generate and evaluate changes to agent code and improvement procedures."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT-0"
+license-files = ["LICENSE"]
+dependencies = []
+
+[project.scripts]
+rsi-engine = "rsi_engine.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8,<10"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["docker: exercises candidate code in disposable Docker containers"]

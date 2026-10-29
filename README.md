@@ -1,0 +1,145 @@
+# RSI Engine
+
+Generate, execute and evaluate changes to an agent's task code and its improvement
+procedure. RSI Engine is a standalone Python SDK and CLI with explicit interfaces
+for future evaluation and operations products.
+
+**Status:** working research prototype. The included demonstration uses scripted
+source replacements and synthetic workflows. It verifies execution, selection,
+rejection, and evidence collection. It does **not** demonstrate learned recursive
+improvement, model superiority, or production readiness.
+
+## Run the first example
+
+Requirements: Python 3.12+, uv, Docker, and a local `python:3.12-slim` image.
+Containers use the resolved image ID throughout a run. Image downloads are explicit:
+
+```sh
+docker pull python:3.12-slim
+uv sync --locked
+uv run --locked rsi-engine doctor
+uv run --locked rsi-engine init local/subscription
+uv run --locked rsi-engine demo --pack local/subscription --out runs/demo
+```
+
+The example begins with a workflow that hands off when it encounters an uncertain
+outcome or a stale state version. Three scripted proposals then:
+
+1. Replace the improvement procedure with code that examines all observed failures.
+2. Use that procedure's output to select a task-code replacement with recovery behavior.
+3. Propose a deliberate regression, which is evaluated, rejected as a parent,
+   and retained in the evidence.
+
+Selection uses a separate validation split. Run the final test explicitly:
+
+```sh
+uv run --locked rsi-engine evaluate \
+  --pack local/subscription --run runs/demo --out runs/demo-final
+uv run --locked rsi-engine audit runs/demo
+uv run --locked rsi-engine audit runs/demo-final
+uv run --locked rsi-engine export runs/demo --out runs/demo-evidence.json
+```
+
+Use new output directories for each run. Existing evidence is never overwritten.
+An AI job orchestration example uses the same adapter:
+
+```sh
+uv run --locked rsi-engine init local/ai-jobs --domain ai_job
+uv run --locked rsi-engine demo --pack local/ai-jobs --out runs/jobs-demo
+```
+
+Both examples share a simulator and fault templates. Their results do not establish
+independent transfer across enterprise environments.
+
+## What is implemented
+
+| Component | Behavior |
+|---|---|
+| Task module | `decide(context)` returns one action; the host executes and grades it |
+| Improvement module | `plan(context)` chooses an editable module and gives the generator instructions |
+| Generator adapter | Receives only development feedback and returns complete replacement Python source |
+| Container runner | Runs candidate source in fresh, resource-limited containers without network or host mounts |
+| Workload adapter | Owns business state, authorized effects and final outcome grading outside the container |
+| Search controller | Retains nonregressing development candidates for exploration and records every decision |
+| Selection | Grades all valid proposed candidates on validation after generation ends |
+| Final evaluation | Requires a committed selection and matching engine, workload, corpus and runtime identities |
+| Evidence archive | Content-addressed artifacts, parent links, chained events, failed proposals and cost records |
+
+The improvement module itself can change and its new code is executed on subsequent
+iterations. Keeping a revised improver for exploration is not evidence that it
+produces better future improvements; that needs the controlled experiment in
+[Research plan](docs/RESEARCH.md).
+
+## Connect a generator
+
+The first integration is a model-neutral command bridge. Supply a trusted host
+program that reads one JSON request from stdin and writes one JSON response line.
+It can call your chosen model provider. No model credentials are required for the
+scripted demo, and no provider is invoked by tests.
+
+Create an ignored `local/generator.json`:
+
+```json
+{
+  "identity": "my-provider-and-model-revision",
+  "argv": ["/absolute/path/to/python", "/absolute/path/to/provider_bridge.py"],
+  "env_names": ["MY_MODEL_API_KEY"]
+}
+```
+
+Then run:
+
+```sh
+uv run --locked rsi-engine run \
+  --pack local/subscription --generator-config local/generator.json \
+  --iterations 3 --max-wall-seconds 600 --max-case-evaluations 120 \
+  --out runs/model-run
+```
+
+The command is explicitly trusted operator code. Only named environment variables
+are passed, alongside `PATH` and `LANG`. Store secrets in the environment, never in
+arguments or source. Candidate code cannot choose the command or its environment.
+See [Generator protocol](docs/INTERFACES.md) for the full request and response.
+
+The engine bounds calls, case evaluations, action steps, response bytes, and
+execution time. A provider bridge must enforce its own provider token and spending
+limits. Unknown usage remains unknown; reported provider cost is not independently
+verified. The engine does not currently enforce a dollar ceiling.
+
+## Integration direction
+
+`rsi_engine.contracts` defines `Generator`, `Runner`, and `Workload` protocols.
+The SDK's `search()` and `evaluate_final()` functions accept these implementations
+directly. The supplied CLI registers the synthetic adapter only; arbitrary modules
+are never imported from a workload pack.
+
+`rsi-engine export` produces `rsi-engine.evidence.v1`, a standalone JSON bundle.
+Practical Eval Lab and Workbench adapters can consume this format later. There is
+no deployment activation, live Workbench registration, or upstream dependency.
+
+## Tests and limits
+
+```sh
+uv run --locked pytest -q
+RSI_DOCKER_TESTS=1 uv run --locked pytest -q -m docker
+uv build --no-sources
+```
+
+The container tests exercise the whole loop on both example domains, final-test
+separation, rejection of a regression, execution limits, blocked networking,
+read-only root filesystems, and absence of host environment variables.
+
+This runner is intended for a single trusted operator on Linux or macOS with Docker.
+Windows and adversarial multi-tenant hosting are not validated. Docker isolation
+depends on the host and daemon; it is not a proof of containment. The generator,
+workload adapter, grader, Docker daemon and engine are trusted components.
+
+Public fixture tests are reproducible development material. Separate commands
+prevent the engine from using final feedback during search; public files are not
+secret holdouts. Zero unsafe effects in this example reflect the fixed guard.
+
+- [Architecture and trust boundaries](docs/ARCHITECTURE.md)
+- [Adapter and evidence interfaces](docs/INTERFACES.md)
+- [Research plan and claims](docs/RESEARCH.md)
+
+Original code and synthetic examples: **MIT-0**.

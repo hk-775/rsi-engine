@@ -1,0 +1,4 @@
+include uv.lock
+include .python-version
+include AGENTS.md
+recursive-include docs *.md
