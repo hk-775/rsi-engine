@@ -1,0 +1,492 @@
+{
+  "source_commit": "b6679ce91d15ef5a6752ed33d4e237393b79cc38",
+  "protocol": {
+    "content": {
+      "arms": {
+        "evolving_history": {
+          "compact": true,
+          "history": true,
+          "meta_iterations": [
+            0
+          ],
+          "name": "evolving_history"
+        },
+        "frozen_history": {
+          "compact": true,
+          "history": true,
+          "meta_iterations": [],
+          "name": "frozen_history"
+        }
+      },
+      "baseline_rule": "Evaluate the unchanged seed once after the selection barrier.",
+      "design": "Three sequential paired blocks with alternating arm order; no shared model RNG seed.",
+      "estimand": "Effect of the scheduled editing strategy under a common resource allowance.",
+      "estimated_inference_ceiling_usd": "2.80",
+      "final_limits": {
+        "case_evaluations": 56,
+        "proposals": 1,
+        "steps_per_case": 24,
+        "wall_seconds": 600
+      },
+      "kernel_id": "2278771269e5a20e92a6bd7666c4f1feb4f95724972805da6ae3e48e03c81097",
+      "limitations": [
+        "Small synthetic pilot, not a production reliability estimate or proof of recursive advantage.",
+        "The evolving arm spends one call editing its improver and has three task-edit calls.",
+        "Both arms receive the same contract, development feedback format and history access.",
+        "Three blocks are the repeated-run units; test domain variants are correlated within 28 families.",
+        "Same author and simulator; the separate effect grader is not external independent validation.",
+        "A fixed schedule allows improver editing; it does not demonstrate open-ended recursive improvement.",
+        "No training or weight updates, deployment, or existing-project integration.",
+        "Costs are token-rate estimates, not an AWS invoice; local compute and engineering time excluded."
+      ],
+      "limits": {
+        "case_evaluations": 110,
+        "proposals": 4,
+        "steps_per_case": 24,
+        "wall_seconds": 1200
+      },
+      "model": {
+        "input_usd_per_million": "3.30",
+        "max_calls": 4,
+        "max_estimated_usd": "0.50",
+        "max_input_tokens": 12000,
+        "max_output_tokens": 2400,
+        "model_id": "us.anthropic.claude-sonnet-4-6",
+        "output_usd_per_million": "16.50",
+        "pricing_date": "2026-10-29",
+        "pricing_source": "https://b0.p.awsstatic.com/pricing/2.0/meteredUnitMaps/bedrockfoundationmodels/USD/current/bedrockfoundationmodels.json",
+        "region": "us-west-2",
+        "temperature": 0.4,
+        "token_count_model_id": "anthropic.claude-sonnet-4-6"
+      },
+      "order": [
+        {
+          "arm": "frozen_history",
+          "block": 1,
+          "name": "block-1-frozen_history"
+        },
+        {
+          "arm": "evolving_history",
+          "block": 1,
+          "name": "block-1-evolving_history"
+        },
+        {
+          "arm": "evolving_history",
+          "block": 2,
+          "name": "block-2-evolving_history"
+        },
+        {
+          "arm": "frozen_history",
+          "block": 2,
+          "name": "block-2-frozen_history"
+        },
+        {
+          "arm": "frozen_history",
+          "block": 3,
+          "name": "block-3-frozen_history"
+        },
+        {
+          "arm": "evolving_history",
+          "block": 3,
+          "name": "block-3-evolving_history"
+        }
+      ],
+      "pack_id": "2eb47f3a4e0ee563857b1c1506abeba391e81d380765d8bd09c388c592b7493d",
+      "primary_metric": "Paired difference in selected-candidate final correctness, evolving minus frozen.",
+      "question": "Does spending one of four model calls on improver code improve final workflow correctness compared with spending all four on task code?",
+      "registered_at": "2026-10-29T18:18:49.535043+00:00",
+      "runner": {
+        "cpu_limit": 0.5,
+        "host_mounts": [],
+        "image_id": "sha256:613c5454f914638dc2bfcab71c8630de0089f7ebff0a7239b54f34866c4b6051",
+        "kind": "docker",
+        "memory_mb": 128,
+        "network": "none",
+        "read_only": true,
+        "response_timeout_seconds": 10,
+        "user": "65534:65534"
+      },
+      "schema": "rsi-engine.pilot.v1",
+      "selection_rule": "Maximum eligible validation correctness, then fewer actions, then earliest revision.",
+      "test_rule": "Commit all six selections before loading test cases; no feedback from test.",
+      "workload": {
+        "adapter": "composed-operation-v1",
+        "grader": "effect-reference-v1",
+        "version": 1
+      }
+    },
+    "id": "faff0dbc23fb75c805bd8b8c3accba521220874da2e2dd48d5fe4073de74f8c4"
+  },
+  "result": {
+    "cost": {
+      "ceiling_usd": "2.80",
+      "conservative_committed_usd": "0.6328278",
+      "inference_calls": 24,
+      "known_estimated_usd": "0.6328278",
+      "unknown_call_costs": 0
+    },
+    "kernel_id": "2278771269e5a20e92a6bd7666c4f1feb4f95724972805da6ae3e48e03c81097",
+    "limitations": [
+      "Small synthetic pilot, not a production reliability estimate or proof of recursive advantage.",
+      "The evolving arm spends one call editing its improver and has three task-edit calls.",
+      "Both arms receive the same contract, development feedback format and history access.",
+      "Three blocks are the repeated-run units; test domain variants are correlated within 28 families.",
+      "Same author and simulator; the separate effect grader is not external independent validation.",
+      "A fixed schedule allows improver editing; it does not demonstrate open-ended recursive improvement.",
+      "No training or weight updates, deployment, or existing-project integration.",
+      "Costs are token-rate estimates, not an AWS invoice; local compute and engineering time excluded.",
+      "Fresh authored compositions with development, validation and test grouped by full fault composition.",
+      "50 families; development 12 cases, validation 10 cases, test 56 cases from 28 families.",
+      "One author and simulator; separately implemented grader is not independent external authorship.",
+      "Test parameter/domain variants share families; no production reliability or independent transfer claim."
+    ],
+    "mean_paired_percentage_point_difference": -4.761904761904762,
+    "model_id": "us.anthropic.claude-sonnet-4-6",
+    "pack_id": "2eb47f3a4e0ee563857b1c1506abeba391e81d380765d8bd09c388c592b7493d",
+    "paired_blocks": 3,
+    "paired_correct_count_differences": [
+      0,
+      0,
+      -8
+    ],
+    "protocol_id": "faff0dbc23fb75c805bd8b8c3accba521220874da2e2dd48d5fe4073de74f8c4",
+    "provenance": "live_model",
+    "recursive_benefit_established": false,
+    "rows": [
+      {
+        "arm": "frozen_history",
+        "block": 1,
+        "candidate_id": "bbe10d56e5e081fab84aa4d8dc04cfc990f0f146dc8a1f3d6dc56bd072aa5229",
+        "chain_head": "4e7beb927811a6b4739474a1c2c99835d5a33281388d1d5482c34c5d99121063",
+        "edited_improver_probe_executions": 0,
+        "edited_improver_search_executions": 0,
+        "failed_proposals": 0,
+        "final": {
+          "blocked_attempts": 10,
+          "candidate_errors": 0,
+          "candidate_id": "bbe10d56e5e081fab84aa4d8dc04cfc990f0f146dc8a1f3d6dc56bd072aa5229",
+          "case_count": 56,
+          "completed": 38,
+          "correct": 56,
+          "correct_handoff": 18,
+          "duplicate_effects": 0,
+          "evaluation_wall_seconds": 20.561223,
+          "false_completions": 0,
+          "tool_calls": 466,
+          "unresolved": 0,
+          "unsafe_effects": 0
+        },
+        "final_chain_head": "2b241f3269da35ce0e2e57202b244edb82680805875cd177b7e5ca52d334cfac",
+        "inference_calls": 4,
+        "name": "block-1-frozen_history",
+        "provider_wall_seconds": 22.132053,
+        "search_budget": {
+          "calls_with_unknown_cost": 0,
+          "calls_with_unknown_tokens": 0,
+          "case_evaluations": 88,
+          "cost_source": "generator_reported_not_independently_verified",
+          "known_estimated_usd_subtotal": "0.0927003",
+          "limits": {
+            "case_evaluations": 110,
+            "proposals": 4,
+            "steps_per_case": 24,
+            "wall_seconds": 1200
+          },
+          "proposal_calls": 4,
+          "reported_input_tokens": 17271,
+          "reported_output_tokens": 2164,
+          "total_estimated_usd": "0.0927003",
+          "wall_seconds": 57.771324
+        }
+      },
+      {
+        "arm": "evolving_history",
+        "block": 1,
+        "candidate_id": "cf792eea6f37f268bbc2021da9a5b3669fab1dc98b8613e0ceda4a46460d30fe",
+        "chain_head": "31fd4c77da9edad7aea6f05ece6703c00cccc301b0ec559810cc16d39293267a",
+        "edited_improver_probe_executions": 1,
+        "edited_improver_search_executions": 3,
+        "failed_proposals": 0,
+        "final": {
+          "blocked_attempts": 10,
+          "candidate_errors": 0,
+          "candidate_id": "cf792eea6f37f268bbc2021da9a5b3669fab1dc98b8613e0ceda4a46460d30fe",
+          "case_count": 56,
+          "completed": 38,
+          "correct": 56,
+          "correct_handoff": 18,
+          "duplicate_effects": 0,
+          "evaluation_wall_seconds": 20.754098,
+          "false_completions": 0,
+          "tool_calls": 460,
+          "unresolved": 0,
+          "unsafe_effects": 0
+        },
+        "final_chain_head": "0f5b6dd9aa18c3e5daf0c1495a1d6cea5f2fb66f1903e2116f48e4798e8f9cd0",
+        "inference_calls": 4,
+        "name": "block-1-evolving_history",
+        "provider_wall_seconds": 23.79941,
+        "search_budget": {
+          "calls_with_unknown_cost": 0,
+          "calls_with_unknown_tokens": 0,
+          "case_evaluations": 88,
+          "cost_source": "generator_reported_not_independently_verified",
+          "known_estimated_usd_subtotal": "0.1083093",
+          "limits": {
+            "case_evaluations": 110,
+            "proposals": 4,
+            "steps_per_case": 24,
+            "wall_seconds": 1200
+          },
+          "proposal_calls": 4,
+          "reported_input_tokens": 19246,
+          "reported_output_tokens": 2715,
+          "total_estimated_usd": "0.1083093",
+          "wall_seconds": 58.105953
+        }
+      },
+      {
+        "arm": "evolving_history",
+        "block": 2,
+        "candidate_id": "ab4d695eae1ac51dbdd39375ccc8115dbf8f6c450f99893093e7c6be6c1c87c9",
+        "chain_head": "8318fa6139e922a8e6c38d65ef5a7e05adb2fd648846e4ae75e200db462f552d",
+        "edited_improver_probe_executions": 1,
+        "edited_improver_search_executions": 3,
+        "failed_proposals": 0,
+        "final": {
+          "blocked_attempts": 10,
+          "candidate_errors": 0,
+          "candidate_id": "ab4d695eae1ac51dbdd39375ccc8115dbf8f6c450f99893093e7c6be6c1c87c9",
+          "case_count": 56,
+          "completed": 38,
+          "correct": 56,
+          "correct_handoff": 18,
+          "duplicate_effects": 0,
+          "evaluation_wall_seconds": 20.845458,
+          "false_completions": 0,
+          "tool_calls": 450,
+          "unresolved": 0,
+          "unsafe_effects": 0
+        },
+        "final_chain_head": "50582b9094c2a3b693f5e92c0b40c67548e2d4f9d92d868fff303434bad6862a",
+        "inference_calls": 4,
+        "name": "block-2-evolving_history",
+        "provider_wall_seconds": 25.422745,
+        "search_budget": {
+          "calls_with_unknown_cost": 0,
+          "calls_with_unknown_tokens": 0,
+          "case_evaluations": 66,
+          "cost_source": "generator_reported_not_independently_verified",
+          "known_estimated_usd_subtotal": "0.1139655",
+          "limits": {
+            "case_evaluations": 110,
+            "proposals": 4,
+            "steps_per_case": 24,
+            "wall_seconds": 1200
+          },
+          "proposal_calls": 4,
+          "reported_input_tokens": 19925,
+          "reported_output_tokens": 2922,
+          "total_estimated_usd": "0.1139655",
+          "wall_seconds": 51.456522
+        }
+      },
+      {
+        "arm": "frozen_history",
+        "block": 2,
+        "candidate_id": "6899f5aebfd199772ce9f016580c2f32b93c279f8e324bfd47f7acdffaae99f4",
+        "chain_head": "731cd1b942ca87c34990fe67c61a3bbc4c9b5e778c14bc9bb4dfd2aea70e9c6d",
+        "edited_improver_probe_executions": 0,
+        "edited_improver_search_executions": 0,
+        "failed_proposals": 0,
+        "final": {
+          "blocked_attempts": 10,
+          "candidate_errors": 0,
+          "candidate_id": "6899f5aebfd199772ce9f016580c2f32b93c279f8e324bfd47f7acdffaae99f4",
+          "case_count": 56,
+          "completed": 38,
+          "correct": 56,
+          "correct_handoff": 18,
+          "duplicate_effects": 0,
+          "evaluation_wall_seconds": 26.120963,
+          "false_completions": 0,
+          "tool_calls": 510,
+          "unresolved": 0,
+          "unsafe_effects": 0
+        },
+        "final_chain_head": "7eb51d1257109f41858404ed1a2075b5e66d929e2df9db3f9c60ba846f0beebd",
+        "inference_calls": 4,
+        "name": "block-2-frozen_history",
+        "provider_wall_seconds": 28.171075,
+        "search_budget": {
+          "calls_with_unknown_cost": 0,
+          "calls_with_unknown_tokens": 0,
+          "case_evaluations": 88,
+          "cost_source": "generator_reported_not_independently_verified",
+          "known_estimated_usd_subtotal": "0.1056462",
+          "limits": {
+            "case_evaluations": 110,
+            "proposals": 4,
+            "steps_per_case": 24,
+            "wall_seconds": 1200
+          },
+          "proposal_calls": 4,
+          "reported_input_tokens": 18529,
+          "reported_output_tokens": 2697,
+          "total_estimated_usd": "0.1056462",
+          "wall_seconds": 62.294859
+        }
+      },
+      {
+        "arm": "frozen_history",
+        "block": 3,
+        "candidate_id": "da15229c6c5d84c36fb171c181ff342a0b5a16ebe4725fb4942e5e393b1e5996",
+        "chain_head": "5c5dedf7e8b445eaaafe82aa08da3900d117c4f26908a3320f668cfdc1c90d37",
+        "edited_improver_probe_executions": 0,
+        "edited_improver_search_executions": 0,
+        "failed_proposals": 0,
+        "final": {
+          "blocked_attempts": 10,
+          "candidate_errors": 0,
+          "candidate_id": "da15229c6c5d84c36fb171c181ff342a0b5a16ebe4725fb4942e5e393b1e5996",
+          "case_count": 56,
+          "completed": 38,
+          "correct": 56,
+          "correct_handoff": 18,
+          "duplicate_effects": 0,
+          "evaluation_wall_seconds": 20.817417,
+          "false_completions": 0,
+          "tool_calls": 472,
+          "unresolved": 0,
+          "unsafe_effects": 0
+        },
+        "final_chain_head": "20f794ca49fb52af70281106977aa60659dab7ce0ddd73debdf456ef1d256492",
+        "inference_calls": 4,
+        "name": "block-3-frozen_history",
+        "provider_wall_seconds": 26.209277,
+        "search_budget": {
+          "calls_with_unknown_cost": 0,
+          "calls_with_unknown_tokens": 0,
+          "case_evaluations": 110,
+          "cost_source": "generator_reported_not_independently_verified",
+          "known_estimated_usd_subtotal": "0.1023693",
+          "limits": {
+            "case_evaluations": 110,
+            "proposals": 4,
+            "steps_per_case": 24,
+            "wall_seconds": 1200
+          },
+          "proposal_calls": 4,
+          "reported_input_tokens": 18236,
+          "reported_output_tokens": 2557,
+          "total_estimated_usd": "0.1023693",
+          "wall_seconds": 68.319973
+        }
+      },
+      {
+        "arm": "evolving_history",
+        "block": 3,
+        "candidate_id": "33274a0681d7302dc57c151425e9b35bc829254abffaeef82dd3e1578fcc0084",
+        "chain_head": "97bb4cc25ccde9c167c708341030692046bd49e91f53341bad65646c761ae36b",
+        "edited_improver_probe_executions": 1,
+        "edited_improver_search_executions": 3,
+        "failed_proposals": 0,
+        "final": {
+          "blocked_attempts": 10,
+          "candidate_errors": 0,
+          "candidate_id": "33274a0681d7302dc57c151425e9b35bc829254abffaeef82dd3e1578fcc0084",
+          "case_count": 56,
+          "completed": 38,
+          "correct": 48,
+          "correct_handoff": 10,
+          "duplicate_effects": 0,
+          "evaluation_wall_seconds": 20.616797,
+          "false_completions": 0,
+          "tool_calls": 594,
+          "unresolved": 8,
+          "unsafe_effects": 0
+        },
+        "final_chain_head": "60cab4ed85396696bbb1bc03804c6b8b864e10011388813cadfedee0185babd3",
+        "inference_calls": 4,
+        "name": "block-3-evolving_history",
+        "provider_wall_seconds": 26.450319,
+        "search_budget": {
+          "calls_with_unknown_cost": 0,
+          "calls_with_unknown_tokens": 0,
+          "case_evaluations": 110,
+          "cost_source": "generator_reported_not_independently_verified",
+          "known_estimated_usd_subtotal": "0.1098372",
+          "limits": {
+            "case_evaluations": 110,
+            "proposals": 4,
+            "steps_per_case": 24,
+            "wall_seconds": 1200
+          },
+          "proposal_calls": 4,
+          "reported_input_tokens": 19864,
+          "reported_output_tokens": 2684,
+          "total_estimated_usd": "0.1098372",
+          "wall_seconds": 69.055241
+        }
+      }
+    ],
+    "schema": "rsi-engine.pilot-result.v1",
+    "seed_final": {
+      "blocked_attempts": 4,
+      "candidate_errors": 0,
+      "candidate_id": "409475aab371dd525b1b7ebcff076fb95688234b7fa66db9f9002c16d6191cdc",
+      "case_count": 56,
+      "completed": 0,
+      "correct": 10,
+      "correct_handoff": 10,
+      "duplicate_effects": 0,
+      "evaluation_wall_seconds": 20.645807,
+      "false_completions": 0,
+      "tool_calls": 128,
+      "unresolved": 46,
+      "unsafe_effects": 0
+    },
+    "unique_test_cases": 56,
+    "unique_test_families": 28
+  },
+  "audit": {
+    "archives": 13,
+    "events": 353,
+    "artifacts": 180
+  },
+  "excluded_initial_attempt": {
+    "cause": "Free-text response included prose before JSON; strict parser rejected it.",
+    "cost": {
+      "ceiling_usd": "3.00",
+      "conservative_committed_usd": "0.1313829",
+      "inference_calls": 5,
+      "known_estimated_usd": "0.0843645",
+      "unknown_call_costs": 1
+    },
+    "final_cases_opened": false,
+    "note": "Interrupted in-flight request retained maximum reservation; no paid retry of this attempt.",
+    "repair": "Forced submit_proposal tool response with exactly one proposal.",
+    "runs": [
+      {
+        "chain_head": "2d5195b9d94bd7e8371d011a55a17a256df5f3114fa7e6e5176c1504bf5fb87a",
+        "events": 10,
+        "name": "block-1-evolving_history",
+        "selection_committed": false
+      },
+      {
+        "chain_head": "1fedec04ecfac2ba2167c61d0240976a5cd47c04d04ca0f63221aaa87958b73b",
+        "events": 37,
+        "name": "block-1-frozen_history",
+        "selection_committed": true
+      }
+    ],
+    "status": "interrupted_for_response_protocol_repair"
+  },
+  "combined_inference_cost": {
+    "known_estimated_usd": "0.7171923",
+    "conservative_including_unknown_usd": "0.7642107",
+    "unknown_requests": 1,
+    "total_inference_attempts": 29,
+    "scope": "Token-rate estimates for both attempts; not billed amounts. Local compute excluded."
+  }
+}

@@ -1,4 +1,27 @@
-# Initial verification
+# Verification
+
+## Version 0.2: live model adapter and comparison
+
+Verified locally on 29 October 2026:
+
+- 64 offline tests passed after the structured-response repair. These use fake
+  clients and SDK stubs; they make no paid provider calls.
+- Six Docker integration checks passed during this change, including the new
+  composed workflow, edited-improver execution, history use, final evaluation
+  and the existing isolation and execution-limit checks.
+- The separately authorized live pilot completed 24 model calls, six committed
+  selections, and seven final evaluations including the unchanged seed.
+- All 13 completed-study archives verified: 353 events and 180 artifacts.
+- The version 0.2 wheel installed into an independent environment. Its CLI worked
+  and its source identity matched the registered experiment.
+- Gitleaks found no secrets in the reviewed source tree. Generated runs and local
+  settings remain excluded from Git.
+
+See [observed results](PILOT_RESULTS.md) and the
+[machine-readable record](results/sonnet-pilot-2026-10-29.json).
+The initial stopped attempt and its unknown request cost are disclosed there.
+
+## Version 0.1: original scripted demonstration
 
 Verified locally on 29 October 2026 with Python 3.12 and Docker on macOS.
 

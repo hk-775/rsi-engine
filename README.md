@@ -9,6 +9,11 @@ registered comparison of frozen and editable improvers. The original `demo` uses
 scripted source replacements. All supplied workflows are synthetic. Running the
 engine does not establish recursive advantage or production readiness.
 
+**First live pilot:** the frozen improver scored 56/56 in all three runs; the
+editable improver scored 56/56, 56/56 and 48/56. The unchanged seed scored 10/56.
+There was no measured benefit from editing the improver in this pilot.
+[Read the results and failure analysis](docs/PILOT_RESULTS.md).
+
 ## Run the model comparison
 
 The pilot asks whether spending one of four model calls on improving the
