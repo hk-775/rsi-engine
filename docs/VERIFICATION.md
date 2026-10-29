@@ -1,4 +1,58 @@
-# Initial verification
+# Verification
+
+## Version 0.3: embedded AutoHelix
+
+Verified locally on 29 October 2026:
+
+- `RSI_DOCKER_TESTS=1 uv run --locked pytest -q`: **81 passed**.
+- AutoHelix's real worktree, receipt-check, metric-gate and commit/reject cycle
+  passed for both supplied domains and the composed workflow.
+- Receipt checks rejected candidate changes after evaluation and linked source
+  files. The checker never imported candidate code.
+- Failed proposals and fatal budget exhaustion retained their evidence and
+  cleaned up the iteration worktree. Rejected-attempt notes reached the next
+  proposal.
+- The version 0.3 wheel installed with its AutoHelix extra in an independent
+  environment. The engine and backend identities matched the source checkout.
+- A CLI run with `--backend autohelix` completed using scripted AI-job proposals:
+  two accepted revisions, one rejected regression, and 8/8 correct final cases
+  (six completed and two correct handoffs).
+- The CLI search archive verified 51 events and 27 artifacts. Its separate final
+  archive verified three events and two artifacts. The portable export includes
+  the AutoHelix configuration, receipts and iteration outcomes.
+
+This was an offline integration check. It made no model calls and does not
+demonstrate learned improvement. The existing Bedrock generator is connected
+through the bridge, but no live provider comparison was run for this integration.
+
+See the [integration guide](AUTOHELIX.md) and
+[verification record](results/autohelix-integration-2026-10-29.json).
+Raw local evidence is in `runs/autohelix-integration-2026-10-29`,
+`runs/autohelix-integration-final-2026-10-29`, and
+`runs/autohelix-integration-evidence-2026-10-29.json`.
+
+## Version 0.2: live model adapter and comparison
+
+Verified locally on 29 October 2026:
+
+- 64 offline tests passed after the structured-response repair. These use fake
+  clients and SDK stubs; they make no paid provider calls.
+- Six Docker integration checks passed during this change, including the new
+  composed workflow, edited-improver execution, history use, final evaluation
+  and the existing isolation and execution-limit checks.
+- The separately authorized live pilot completed 24 model calls, six committed
+  selections, and seven final evaluations including the unchanged seed.
+- All 13 completed-study archives verified: 353 events and 180 artifacts.
+- The version 0.2 wheel installed into an independent environment. Its CLI worked
+  and its source identity matched the registered experiment.
+- Gitleaks found no secrets in the reviewed source tree. Generated runs and local
+  settings remain excluded from Git.
+
+See [observed results](PILOT_RESULTS.md) and the
+[machine-readable record](results/sonnet-pilot-2026-10-29.json).
+The initial stopped attempt and its unknown request cost are disclosed there.
+
+## Version 0.1: original scripted demonstration
 
 Verified locally on 29 October 2026 with Python 3.12 and Docker on macOS.
 

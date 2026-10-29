@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rsi-engine"
-version = "0.1.0"
+version = "0.3.0"
 description = "Generate and evaluate changes to agent code and improvement procedures."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -15,8 +15,12 @@ dependencies = []
 [project.scripts]
 rsi-engine = "rsi_engine.cli:main"
 
+[project.optional-dependencies]
+autohelix = ["autohelix==0.1.0"]
+bedrock = ["boto3>=1.43,<2"]
+
 [dependency-groups]
-dev = ["pytest>=8,<10"]
+dev = ["pytest>=8,<10", "boto3>=1.43,<2", "autohelix==0.1.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -16,9 +16,21 @@ commit, hidden receipts, authority revocation, permanent outages and transient
 outages. Its authorization and idempotency controls are fixed. The agent does not
 learn those controls.
 
-## Next experiment
+## Implemented pilot
 
-1. Connect one explicitly selected model generator with bounded provider spend.
+The native Bedrock adapter now supports a bounded live-model comparison. The
+registered pilot compares a frozen improver with history against an editable
+improver with the same history access. It includes an unchanged seed control,
+three paired runs, a new two-stage synthetic corpus and a separate host effect
+grader. Details and limitations are in [PILOT.md](PILOT.md).
+
+This is scheduled strategy editing, with one model call allocated to changing
+the improver. It does not establish open-ended recursive improvement. The
+corpus is newly authored, but is not independently authored by an external team.
+
+## Stronger follow-up
+
+1. Use the bounded model generator with a registered, sufficiently powered budget.
 2. Retain the unchanged task agent as a control.
 3. Compare a frozen improvement procedure, a frozen procedure with accumulated
    history, and an editable procedure with equivalent access to that history.

@@ -21,6 +21,10 @@ class BudgetExceeded(EngineError):
     pass
 
 
+class BackendError(EngineError):
+    """An orchestration integrity failure; abort rather than try another proposal."""
+
+
 def canonical(value: Any) -> bytes:
     try:
         return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True,

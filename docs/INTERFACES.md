@@ -93,6 +93,43 @@ The provenance label is `external_generator`, not automatically `live_model`.
 A provider integration should declare an exact model revision in its identity
 and supply its own provider limits.
 
+## Native model adapter and comparison
+
+The native `BedrockGenerator` accepts a validated `BedrockConfig` and an optional
+shared `CostLedger`. Install it with `uv sync --locked --extra bedrock`. Its
+`settings` are archived, and `last_call` preserves provider evidence on success
+and failure. Credentials resolve through the SDK credential chain and never
+enter candidate containers.
+
+`SearchPolicy` can enforce the requested edit target and enable history with
+compact development feedback. The `frozen_history` and `evolving_history`
+policies give equal history access; their edit schedules differ. A changed
+improver must honor the registered target and execute in Docker before it can
+be retained.
+
+`study.prepare()`, `study.run_study()` and `study.evaluate_study()` implement the
+fixed pilot protocol. They are intentionally separate operations. Interrupted
+paid execution fails closed; there is no automatic spending-budget reset.
+
+## Embedded AutoHelix backend
+
+`search(..., backend="autohelix")` runs AutoHelix's actual iteration method
+through an RSI proposal/evaluation bridge. Install the pinned optional dependency
+with `uv sync --locked --extra autohelix`.
+
+`study.prepare(..., backend="autohelix")` records this backend and its package
+digest in the study protocol. Registered runs verify that identity.
+
+The generator and workload protocols remain unchanged. AutoHelix's recent
+history and persistent hypothesis notes arrive as an additional `optimizer`
+object in the improver context and generator request. It contains development
+information only. Commands should treat it as untrusted data.
+
+The run manifest, selection and final report carry `iteration_backend`. Evidence
+adds `autohelix_config`, `autohelix_evaluation_receipt` and
+`autohelix_iteration_result` artifacts. The existing evidence export includes
+them automatically. See [AutoHelix](AUTOHELIX.md) for the trust boundaries.
+
 ## Evidence export
 
 `rsi-engine export` emits `rsi-engine.evidence.v1` with:
