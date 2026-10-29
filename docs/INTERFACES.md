@@ -111,6 +111,25 @@ be retained.
 fixed pilot protocol. They are intentionally separate operations. Interrupted
 paid execution fails closed; there is no automatic spending-budget reset.
 
+## Embedded AutoHelix backend
+
+`search(..., backend="autohelix")` runs AutoHelix's actual iteration method
+through an RSI proposal/evaluation bridge. Install the pinned optional dependency
+with `uv sync --locked --extra autohelix`.
+
+`study.prepare(..., backend="autohelix")` records this backend and its package
+digest in the study protocol. Registered runs verify that identity.
+
+The generator and workload protocols remain unchanged. AutoHelix's recent
+history and persistent hypothesis notes arrive as an additional `optimizer`
+object in the improver context and generator request. It contains development
+information only. Commands should treat it as untrusted data.
+
+The run manifest, selection and final report carry `iteration_backend`. Evidence
+adds `autohelix_config`, `autohelix_evaluation_receipt` and
+`autohelix_iteration_result` artifacts. The existing evidence export includes
+them automatically. See [AutoHelix](AUTOHELIX.md) for the trust boundaries.
+
 ## Evidence export
 
 `rsi-engine export` emits `rsi-engine.evidence.v1` with:

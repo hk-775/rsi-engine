@@ -11,6 +11,7 @@ from .budget import Budget, Limits
 from .composed import ComposedWorkload, open_pack
 from .contracts import EngineError, canonical, decode, digest
 from .engine import evaluate_final, kernel_identity, search, selected
+from .iterations import describe_backend
 from .policy import SearchPolicy
 from .workload import disjoint
 
@@ -33,7 +34,7 @@ def read_record(path):
     return record
 
 
-def prepare(root: Path, pack, runner, config: BedrockConfig, ceiling="3.00"):
+def prepare(root: Path, pack, runner, config: BedrockConfig, ceiling="3.00", backend="native"):
     if decimal_amount(ceiling, "study ceiling") > Decimal("3.00"):
         raise EngineError("This pilot supports at most $3 estimated inference cost")
     if config.max_calls != 4 or Decimal(config.max_estimated_usd) > Decimal("0.50"):
@@ -59,6 +60,7 @@ def prepare(root: Path, pack, runner, config: BedrockConfig, ceiling="3.00"):
         "design": "Three sequential paired blocks with alternating arm order; no shared model RNG seed.",
         "kernel_id": kernel_identity(), "pack_id": pack.id, "runner": runner.identity,
         "workload": ComposedWorkload.identity, "model": asdict(config),
+        "iteration_backend": describe_backend(backend),
         "arms": {k: asdict(v) for k, v in ARMS.items()}, "order": order,
         "limits": asdict(LIMITS), "final_limits": asdict(FINAL_LIMITS),
         "estimated_inference_ceiling_usd": ceiling,
@@ -89,6 +91,8 @@ def verify_protocol(root, pack, runner):
         raise EngineError("Engine, pack or runner changed after pilot registration")
     if p["workload"] != ComposedWorkload.identity:
         raise EngineError("Workload changed after registration")
+    if p["iteration_backend"] != describe_backend(p["iteration_backend"]["name"]):
+        raise EngineError("Iteration backend changed after registration")
     return record
 
 
@@ -109,7 +113,7 @@ def run_study(root: Path, pack, runner, *, generator_factory=BedrockGenerator, p
             policy = SearchPolicy(raw_policy["name"], tuple(raw_policy["meta_iterations"]),
                                   raw_policy["history"], raw_policy["compact"])
             search(pack, generator, runner, ComposedWorkload(), root / item["name"],
-                   Limits(**p["limits"]), policy)
+                   Limits(**p["limits"]), policy, p["iteration_backend"]["name"])
             candidate, _, verified = selected(root / item["name"])
             selections.append({**item, "candidate_id": candidate.id, "chain_head": verified["chain_head"]})
             if progress:
@@ -135,6 +139,7 @@ def verify_barrier(root, record):
         if (candidate.id != selection["candidate_id"] or verified["chain_head"] != selection["chain_head"]
                 or manifest["kernel_id"] != record["content"]["kernel_id"]
                 or manifest["pack_id"] != record["content"]["pack_id"]
+                or manifest["iteration_backend"] != record["content"]["iteration_backend"]
                 or manifest["generator_settings"] is None
                 or any(manifest["generator_settings"][k] != v for k, v in record["content"]["model"].items())
                 or manifest["search_policy"] != record["content"]["arms"][expected["arm"]]):

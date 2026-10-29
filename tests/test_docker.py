@@ -22,10 +22,11 @@ def runner():
 
 
 @pytest.mark.parametrize("domain", ["subscription", "ai_job"])
-def test_complete_search_selection_final_and_export(tmp_path, runner, domain):
+@pytest.mark.parametrize("backend", ["native", "autohelix"])
+def test_complete_search_selection_final_and_export(tmp_path, runner, domain, backend):
     pack = Pack(write_pack(tmp_path / "pack", domain))
     run = tmp_path / "search"
-    result = search(pack, ScriptedGenerator(), runner, StatefulWorkload(), run)
+    result = search(pack, ScriptedGenerator(), runner, StatefulWorkload(), run, backend=backend)
     verified = audit(run, True)
     baseline = verified["objects"][result["baseline_development_report"]]["content"]
     assert baseline["correct"] == 3
@@ -37,6 +38,7 @@ def test_complete_search_selection_final_and_export(tmp_path, runner, domain):
     assert result["budget"]["total_estimated_usd"] is None
     assert not result["final_test_used"]
     assert not result["recursive_benefit_established"]
+    assert result["iteration_backend"]["name"] == backend
     events = verified["events"]
     assert any(e["kind"] == "improver_executed" and "unknown" in e["data"]["plan"]["instruction"] for e in events)
     assert any(e["kind"] == "development_decision" and e["data"]["decision"] == "reject_as_parent" for e in events)
@@ -50,6 +52,11 @@ def test_complete_search_selection_final_and_export(tmp_path, runner, domain):
     assert final["provenance"] == "scripted_fixture"
     assert export_evidence(run)["integration_status"] == "standalone_export"
     assert audit(tmp_path / "final")["events"][-1]["kind"] == "final_evaluation_completed"
+    if backend == "autohelix":
+        decisions = [o["content"] for o in verified["objects"].values()
+                     if o["kind"] == "autohelix_iteration_result"]
+        assert sorted(d["accepted"] for d in decisions) == [False, True, True]
+        assert not list((run / "autohelix/workspace/.autohelix/worktrees").glob("iter-*"))
 
 
 def test_container_has_no_host_environment_and_cannot_write_root(runner, monkeypatch):
@@ -95,7 +102,8 @@ def test_exhausted_budget_never_creates_a_final_selection(tmp_path, runner):
     assert audit(run)["events"][-1]["kind"] == "run_aborted"
 
 
-def test_composed_search_executes_edited_improver_with_history(tmp_path, runner):
+@pytest.mark.parametrize("backend", ["native", "autohelix"])
+def test_composed_search_executes_edited_improver_with_history(tmp_path, runner, backend):
     from rsi_engine.composed import ComposedWorkload, open_pack, write_pack as write_composed
     from rsi_engine.policy import SearchPolicy
     pack = open_pack(write_composed(tmp_path / "pack"))
@@ -121,7 +129,7 @@ def test_composed_search_executes_edited_improver_with_history(tmp_path, runner)
                                  "hypothesis": "scripted fixture, not learned"},
                     "usage": {"input_tokens": None, "output_tokens": None, "estimated_usd": None}}
     result = search(pack, Generator(), runner, ComposedWorkload(), tmp_path / "run",
-                    Limits(2, 66, 600, 24), SearchPolicy("evolving_history", (0,), True, True))
+                    Limits(2, 66, 600, 24), SearchPolicy("evolving_history", (0,), True, True), backend)
     assert result["summary"]["correct"] == 10
     verified = audit(tmp_path / "run")
     assert any(e["kind"] == "improvement_plan_executed" and e["data"]["edited_improver"]
@@ -129,3 +137,14 @@ def test_composed_search_executes_edited_improver_with_history(tmp_path, runner)
     final = evaluate_final(tmp_path / "run", pack, runner, ComposedWorkload(), tmp_path / "final",
                            Limits(1, 56, 600, 24))
     assert final["report"]["correct"] == 56
+
+
+def test_autohelix_preserves_fatal_budget_failure(tmp_path, runner):
+    pack = Pack(write_pack(tmp_path / "pack"))
+    run = tmp_path / "run"
+    with pytest.raises(EngineError, match="budget"):
+        search(pack, ScriptedGenerator(), runner, StatefulWorkload(), run,
+               Limits(proposals=1, case_evaluations=8), backend="autohelix")
+    assert not (run / "selection.json").exists()
+    assert audit(run)["events"][-1]["kind"] == "run_aborted"
+    assert not list((run / "autohelix/workspace/.autohelix/worktrees").glob("iter-*"))

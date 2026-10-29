@@ -40,6 +40,9 @@ def parser():
         command.add_argument("--max-case-evaluations", type=int, default=120)
         command.add_argument("--max-wall-seconds", type=int, default=600)
         command.add_argument("--max-steps", type=int, default=12)
+        if name != "evaluate":
+            command.add_argument("--backend", choices=["native", "autohelix"], default="native",
+                                 help="Iteration backend; AutoHelix uses the RSI generator/evaluator bridge")
         if name == "run":
             source = command.add_mutually_exclusive_group(required=True)
             source.add_argument("--generator-config", type=Path)
@@ -61,6 +64,7 @@ def parser():
         if name == "study-prepare":
             command.add_argument("--bedrock-config", type=Path, required=True)
             command.add_argument("--max-estimated-usd", default="3.00")
+            command.add_argument("--backend", choices=["native", "autohelix"], default="native")
     return result
 
 
@@ -99,7 +103,7 @@ def main(argv=None):
             progress = lambda value: print(json.dumps(value), flush=True)
             if args.command == "study-prepare":
                 config = BedrockConfig(**decode(args.bedrock_config.read_bytes()))
-                result = prepare(args.study, pack, runner, config, args.max_estimated_usd)
+                result = prepare(args.study, pack, runner, config, args.max_estimated_usd, args.backend)
                 progress({"protocol_id": result["id"], "study": str(args.study)})
             elif args.command == "study-run":
                 result = run_study(args.study, pack, runner, progress=progress)
@@ -133,7 +137,7 @@ def main(argv=None):
                     policy = ARMS[args.policy]
                 elif pack.manifest["adapter"] == "composed-operation-v1":
                     raise EngineError("Composed packs require a frozen_history or evolving_history policy")
-            result = search(pack, generator, runner, workload, args.out, limits, policy)
+            result = search(pack, generator, runner, workload, args.out, limits, policy, args.backend)
             report = result["summary"]
             split = "validation"
         print(json.dumps({
@@ -142,6 +146,7 @@ def main(argv=None):
             "completed": report["completed"], "correct_handoff": report["correct_handoff"],
             "unresolved": report["unresolved"], "false_completions": report["false_completions"],
             "candidate_id": result["candidate_id"], "budget": result["budget"],
+            "iteration_backend": result.get("iteration_backend"),
             "recursive_benefit_established": False, "output": str(args.out),
         }, indent=2))
         return 0

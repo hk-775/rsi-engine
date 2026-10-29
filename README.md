@@ -9,10 +9,29 @@ registered comparison of frozen and editable improvers. The original `demo` uses
 scripted source replacements. All supplied workflows are synthetic. Running the
 engine does not establish recursive advantage or production readiness.
 
+**AutoHelix is embedded as an iteration backend.** It manages worktrees, history
+and acceptance while RSI Engine retains isolated evaluation and experiment
+controls. [Integration and commands](docs/AUTOHELIX.md).
+
 **First live pilot:** the frozen improver scored 56/56 in all three runs; the
 editable improver scored 56/56, 56/56 and 48/56. The unchanged seed scored 10/56.
 There was no measured benefit from editing the improver in this pilot.
 [Read the results and failure analysis](docs/PILOT_RESULTS.md).
+
+## Try the AutoHelix backend
+
+```sh
+uv sync --locked --extra autohelix
+uv run --locked rsi-engine init local/helix-ai-jobs --domain ai_job
+uv run --locked rsi-engine demo \
+  --backend autohelix --pack local/helix-ai-jobs --out runs/helix-demo
+uv run --locked rsi-engine evaluate \
+  --pack local/helix-ai-jobs --run runs/helix-demo --out runs/helix-demo-final
+```
+
+The demonstration uses scripted proposals and requires Docker. It makes no model
+calls. Add `--backend autohelix` to `run` or `study-prepare` to use the embedded
+backend with a configured generator. The default `native` backend is preserved.
 
 ## Run the model comparison
 
@@ -98,6 +117,7 @@ independent transfer across enterprise environments.
 | Container runner | Runs candidate source in fresh, resource-limited containers without network or host mounts |
 | Workload adapter | Owns business state, authorized effects and final outcome grading outside the container |
 | Search controller | Retains nonregressing development candidates for exploration and records every decision |
+| AutoHelix backend | Runs the upstream worktree/check/gate/merge cycle through the RSI proposal bridge |
 | Selection | Grades all valid proposed candidates on validation after generation ends |
 | Final evaluation | Requires a committed selection and matching engine, workload, corpus and runtime identities |
 | Evidence archive | Content-addressed artifacts, parent links, chained events, failed proposals and cost records |
@@ -176,6 +196,7 @@ prevent the engine from using final feedback during search; public files are not
 secret holdouts. Zero unsafe effects in this example reflect the fixed guard.
 
 - [Architecture and trust boundaries](docs/ARCHITECTURE.md)
+- [Embedded AutoHelix](docs/AUTOHELIX.md)
 - [Adapter and evidence interfaces](docs/INTERFACES.md)
 - [Research plan and claims](docs/RESEARCH.md)
 

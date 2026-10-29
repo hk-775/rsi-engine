@@ -1,5 +1,36 @@
 # Verification
 
+## Version 0.3: embedded AutoHelix
+
+Verified locally on 29 October 2026:
+
+- `RSI_DOCKER_TESTS=1 uv run --locked pytest -q`: **81 passed**.
+- AutoHelix's real worktree, receipt-check, metric-gate and commit/reject cycle
+  passed for both supplied domains and the composed workflow.
+- Receipt checks rejected candidate changes after evaluation and linked source
+  files. The checker never imported candidate code.
+- Failed proposals and fatal budget exhaustion retained their evidence and
+  cleaned up the iteration worktree. Rejected-attempt notes reached the next
+  proposal.
+- The version 0.3 wheel installed with its AutoHelix extra in an independent
+  environment. The engine and backend identities matched the source checkout.
+- A CLI run with `--backend autohelix` completed using scripted AI-job proposals:
+  two accepted revisions, one rejected regression, and 8/8 correct final cases
+  (six completed and two correct handoffs).
+- The CLI search archive verified 51 events and 27 artifacts. Its separate final
+  archive verified three events and two artifacts. The portable export includes
+  the AutoHelix configuration, receipts and iteration outcomes.
+
+This was an offline integration check. It made no model calls and does not
+demonstrate learned improvement. The existing Bedrock generator is connected
+through the bridge, but no live provider comparison was run for this integration.
+
+See the [integration guide](AUTOHELIX.md) and
+[verification record](results/autohelix-integration-2026-10-29.json).
+Raw local evidence is in `runs/autohelix-integration-2026-10-29`,
+`runs/autohelix-integration-final-2026-10-29`, and
+`runs/autohelix-integration-evidence-2026-10-29.json`.
+
 ## Version 0.2: live model adapter and comparison
 
 Verified locally on 29 October 2026:

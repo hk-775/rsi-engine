@@ -10,7 +10,8 @@ import time
 from . import __version__
 from .archive import Archive, audit
 from .budget import Budget, Limits
-from .contracts import Candidate, EngineError, Generated, Usage, digest, exact, text
+from .contracts import BackendError, Candidate, EngineError, Generated, Usage, digest, exact, text
+from .iterations import EvaluatedChange, NativeIterations, describe_backend, eligible
 from .workload import Pack, disjoint
 from .policy import SearchPolicy, compact_report
 
@@ -30,17 +31,15 @@ def plan(candidate, context, runner, budget):
     return value
 
 
-def eligible(report):
-    return not (report["unsafe_effects"] or report["duplicate_effects"]
-                or report["false_completions"] or report["candidate_errors"])
-
-
 def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | None = None,
-           policy: SearchPolicy | None = None):
+           policy: SearchPolicy | None = None, backend: str = "native"):
     if workload.identity.get("adapter") != pack.manifest["adapter"]:
         raise EngineError("Workload adapter does not match the pack")
     budget = Budget(limits or Limits())
     policy = policy or SearchPolicy()
+    backend_identity = describe_backend(backend)
+    if backend == "autohelix":
+        from .helix import AutoHelixIterations
     archive = Archive(out)
     manifest = {
         "schema_version": 1, "engine_version": __version__, "kernel_id": kernel_identity(),
@@ -48,6 +47,7 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
         "generator": {"identity": generator.identity, "provenance": generator.provenance},
         "generator_settings": getattr(generator, "settings", None),
         "search_policy": asdict(policy),
+        "iteration_backend": backend_identity,
         "runner": runner.identity, "workload": workload.identity,
         "limits": asdict(budget.limits),
         "selection_rule": "eligible maximum validation correctness, then fewer tool calls, then earliest revision",
@@ -66,6 +66,8 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
         seen = {active.id}
         active_report = initial_report
         history = []
+        iterations = (AutoHelixIterations(archive, active, initial_report, budget)
+                      if backend == "autohelix" else NativeIterations())
         for iteration in range(budget.limits.proposals):
             feedback = compact_report(active_report) if policy.compact else active_report
             requested_target = policy.target(iteration)
@@ -74,7 +76,9 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
                 context["history"] = list(history)
             if requested_target:
                 context["requested_target"] = requested_target
-            try:
+            def produce(optimizer):
+                if optimizer is not None:
+                    context["optimizer"] = optimizer
                 instruction = plan(active, context, runner, budget)
                 if requested_target and instruction["target"] != requested_target:
                     raise EngineError("Improver plan violates the registered edit schedule")
@@ -97,6 +101,8 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
                 }
                 if policy.history:
                     request["history"] = list(history)
+                if optimizer is not None:
+                    request["optimizer"] = optimizer
                 request_artifact = archive.put("generation_request", request)
                 budget.reserve_proposal()
                 started = time.monotonic()
@@ -130,7 +136,7 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
                     archive.event("duplicate_candidate", {"candidate_id": child.id})
                     history.append({"iteration": iteration, "target": generated.proposal.target,
                                     "hypothesis": generated.proposal.hypothesis, "decision": "duplicate"})
-                    continue
+                    return None
                 seen.add(child.id)
                 # An edited improver must actually execute and produce a valid plan.
                 if generated.proposal.target == "improver":
@@ -144,21 +150,28 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
                 report = workload.evaluate(child, development, runner, budget)
                 report_artifact = archive.put("development_report", report)
                 candidates.append((child, child_artifact))
-                retained = eligible(report) and report["correct"] >= active_report["correct"]
+                return EvaluatedChange(child, report, generated.proposal.target,
+                                       generated.proposal.hypothesis, usage, report_artifact)
+
+            try:
+                change, retained = iterations.run(iteration, active, active_report, produce)
+                if change is None:
+                    continue
+                child, report = change.candidate, change.report
                 archive.event("development_decision", {
-                    "candidate_id": child.id, "report": report_artifact,
+                    "candidate_id": child.id, "report": change.report_artifact,
                     "decision": "retain_for_exploration" if retained else "reject_as_parent",
                     "recursive_benefit_established": False,
                 })
-                history.append({"iteration": iteration, "target": generated.proposal.target,
-                                "hypothesis": generated.proposal.hypothesis,
+                history.append({"iteration": iteration, "target": change.target,
+                                "hypothesis": change.hypothesis,
                                 "correct": report["correct"], "case_count": report["case_count"],
                                 "decision": "retain_for_exploration" if retained else "reject_as_parent"})
                 if retained:
                     active, active_report = child, report
             except EngineError as exc:
                 from .contracts import BudgetExceeded
-                if isinstance(exc, BudgetExceeded):
+                if isinstance(exc, (BudgetExceeded, BackendError)):
                     raise
                 archive.event("proposal_failed", {"iteration": iteration, "reason": str(exc)})
                 history.append({"iteration": iteration, "decision": "failed", "reason": str(exc)})
@@ -185,6 +198,7 @@ def search(pack: Pack, generator, runner, workload, out: Path, limits: Limits | 
             "summary": {k: v for k, v in chosen[5].items() if k != "results"},
             "budget": budget.snapshot(),
             "provenance": generator.provenance,
+            "iteration_backend": backend_identity,
             "final_test_used": False,
             "recursive_benefit_established": False,
         }
@@ -232,6 +246,7 @@ def evaluate_final(run: Path, pack: Pack, runner, workload, out: Path, limits: L
             "schema_version": 1, "candidate_id": candidate.id, "split": "test",
             "report": report, "budget": budget.snapshot(),
             "provenance": manifest["generator"]["provenance"],
+            "iteration_backend": manifest.get("iteration_backend", NativeIterations.identity),
             "recursive_benefit_established": False,
             "limitations": pack.manifest["limitations"],
         }

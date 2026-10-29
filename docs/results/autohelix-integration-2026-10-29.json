@@ -1,0 +1,66 @@
+{
+  "schema": "rsi-engine.integration-check.v1",
+  "engine_version": "0.3.0",
+  "kernel_id": "424c722141a864ce77b53e7b5c9346da2b1de762e973630692b907c7b672cbe1",
+  "backend": {
+    "agent_bridge": "rsi-proposal-v1",
+    "checks": "external-receipt-v1",
+    "name": "autohelix",
+    "package_digest": "b88059d8be75f7a362c1aaf4ac72e7c4c2837c292de1ad5ed4b1dc542ea1b97a",
+    "version": "0.1.0"
+  },
+  "provenance": "scripted_fixture",
+  "model_calls": 0,
+  "recursive_benefit_established": false,
+  "tests": {
+    "passed": 81,
+    "command": "RSI_DOCKER_TESTS=1 uv run --locked pytest -q"
+  },
+  "selected_candidate_id": "f18a1fbbfa12131b68ddf3e4e006cced96136aaeb2fcbf86b5705a5c3ce58f75",
+  "final": {
+    "candidate_errors": 0,
+    "candidate_id": "f18a1fbbfa12131b68ddf3e4e006cced96136aaeb2fcbf86b5705a5c3ce58f75",
+    "case_count": 8,
+    "completed": 6,
+    "correct": 8,
+    "correct_handoff": 2,
+    "duplicate_effects": 0,
+    "evaluation_wall_seconds": 3.319173,
+    "false_completions": 0,
+    "tool_calls": 27,
+    "unresolved": 0,
+    "unsafe_effects": 0
+  },
+  "iteration_decisions": [
+    {
+      "iteration": 1,
+      "accepted": true,
+      "has_commit": true
+    },
+    {
+      "iteration": 2,
+      "accepted": true,
+      "has_commit": true
+    },
+    {
+      "iteration": 3,
+      "accepted": false,
+      "has_commit": false
+    }
+  ],
+  "search_archive": {
+    "events": 51,
+    "artifacts": 27,
+    "chain_head": "0424f54c4e81d5c570c148e89fbaffe3db51c0fcd4981b57b7ec21e585fee19e"
+  },
+  "final_archive": {
+    "events": 3,
+    "artifacts": 2,
+    "chain_head": "460a10556a0c5c3023f96de7fb8dbbc0b69ed70fff7bbef9d854cd0976fe8286"
+  },
+  "isolated_package_install": "passed; engine and AutoHelix package identities matched",
+  "limits": [
+    "Scripted functional verification; no learned or recursive benefit demonstrated.",
+    "No live provider run was performed for this integration."
+  ]
+}
