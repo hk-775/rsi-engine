@@ -28,6 +28,22 @@ This is scheduled strategy editing, with one model call allocated to changing
 the improver. It does not establish open-ended recursive improvement. The
 corpus is newly authored, but is not independently authored by an external team.
 
+## Implemented reward-integrity study
+
+Version 0.4 adds a 2 x 2 live AutoHelix experiment: reported-counter versus
+verified-outcome feedback, each with frozen and editable improvers. It uses
+synthetic AI batch jobs, ninety fault compositions, a final selection barrier,
+and an output auditor that candidates cannot edit.
+
+Verified feedback produced 120/120 correct outcomes in all runs for both
+strategies. Reported-score frozen runs were less consistent. Handwritten probes
+demonstrated counter manipulation; the twelve selected live-model policies made
+no false completion claims in final evaluation. These findings do not establish
+general recursive advantage or spontaneous model deception.
+
+See the [results and replay evidence](REWARD_RESULTS.md) and
+[registered method](REWARD_STUDY.md).
+
 ## Stronger follow-up
 
 1. Use the bounded model generator with a registered, sufficiently powered budget.

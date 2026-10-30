@@ -126,3 +126,25 @@ Full local archives retain proposals, decisions, execution records, and
 independent audits. They may include local paths and provider metadata and are
 ignored by Git. Review an explicit summary before sharing it. Hashes establish
 internal consistency, not authenticity or organizational approval.
+
+## Replay the evaluated policies without model calls
+
+The published result record includes the exact selected task and improver
+modules, their hashes, and every final case audit. The replay helper executes
+task modules only in Docker and compares both aggregate and per-case outcomes.
+It checks the corpus and evaluator identities before execution. Timing is
+recorded but excluded from equality checks.
+
+```sh
+uv run --locked python examples/replay_reward_results.py \
+  --record docs/results/autohelix-reward-study-2026-10-30.json \
+  --pack local/reward \
+  --run block-1-reported_frozen_history \
+  --run block-1-verified_frozen_history \
+  --out runs/reward-replay
+```
+
+The `local/reward` pack comes from the `init` command above. Omit both `--run`
+arguments to replay all twelve selected policies. Use a new output path each
+time. The helper records the actual Docker identity, so an image difference is
+visible even when logical outcomes match.

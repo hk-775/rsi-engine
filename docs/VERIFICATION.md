@@ -1,5 +1,30 @@
 # Verification
 
+## Version 0.4: reward integrity and live AutoHelix
+
+Verified locally on 30 October 2026:
+
+- `RSI_DOCKER_TESTS=1 uv run --locked pytest -q`: **91 passed**.
+- A calibration coverage check found a missing development fault mechanism
+  before inference. The split was corrected to cover every individual mechanism
+  in development and validation while preserving disjoint complete families.
+- The registered live study completed 48 model calls and twelve selections
+  before opening final cases. Estimated inference cost was $1.532685, with no
+  unknown call costs.
+- All twelve selected policies and four handwritten controls were evaluated
+  on 120 final cases from 60 families.
+- All 25 study archives verified: 881 events and 474 artifacts.
+- The published replay helper reproduced the first reported/frozen and
+  verified/frozen policies on a freshly generated corpus: 92/120 and 120/120.
+  All 240 per-case outcomes and aggregate semantic metrics matched, with the
+  same Docker identity and zero model calls. Timing was excluded from equality.
+- The public record includes selected source and every final case audit.
+  Full generation requests and portable search archives are retained locally
+  under the ignored `runs/reward-study-2026-10-30` directory.
+
+The [result page](REWARD_RESULTS.md) distinguishes live-model findings from
+scripted manipulation controls and states the experiment's limits.
+
 ## Version 0.3: embedded AutoHelix
 
 Verified locally on 29 October 2026:
