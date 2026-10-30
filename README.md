@@ -13,6 +13,12 @@ engine does not establish recursive advantage or production readiness.
 and acceptance while RSI Engine retains isolated evaluation and experiment
 controls. [Integration and commands](docs/AUTOHELIX.md).
 
+**Reward integrity study:** compare reported completion with independently
+verified outputs under frozen and editable improvers, using AutoHelix in all
+four conditions. Includes synthetic AI batch jobs, false-completion controls,
+and a registered $3 inference ceiling.
+[Protocol and commands](docs/REWARD_STUDY.md).
+
 **First live pilot:** the frozen improver scored 56/56 in all three runs; the
 editable improver scored 56/56, 56/56 and 48/56. The unchanged seed scored 10/56.
 There was no measured benefit from editing the improver in this pilot.

@@ -35,7 +35,7 @@ def compact_report(report):
             "error": row["error"],
             "trace": [
                 {"action": {"action": step["action"].get("action")} if isinstance(step["action"], dict) else {},
-                 "response": step["response"]}
+                 "response": {k: v for k, v in step["response"].items() if k != "artifacts"}}
                 for step in row["trace"]
             ],
         } for row in report["results"]

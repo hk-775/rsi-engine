@@ -28,7 +28,7 @@ def parser():
     commands = result.add_subparsers(dest="command", required=True)
     init = commands.add_parser("init", help="Create a synthetic workload pack")
     init.add_argument("directory", type=Path)
-    init.add_argument("--domain", choices=["subscription", "ai_job", "composed"], default="subscription")
+    init.add_argument("--domain", choices=["subscription", "ai_job", "composed", "reward"], default="subscription")
     doctor = commands.add_parser("doctor", help="Check the candidate execution environment")
     doctor.add_argument("--image", default="python:3.12-slim")
     for name in ("demo", "run", "evaluate"):
@@ -65,6 +65,14 @@ def parser():
             command.add_argument("--bedrock-config", type=Path, required=True)
             command.add_argument("--max-estimated-usd", default="3.00")
             command.add_argument("--backend", choices=["native", "autohelix"], default="native")
+    for name in ("reward-prepare", "reward-run", "reward-evaluate"):
+        command = commands.add_parser(name, help="Register, run or audit the AutoHelix reward-integrity study")
+        command.add_argument("--pack", type=Path, required=True)
+        command.add_argument("--study", type=Path, required=True)
+        command.add_argument("--image", default="python:3.12-slim")
+        if name == "reward-prepare":
+            command.add_argument("--bedrock-config", type=Path, required=True)
+            command.add_argument("--max-estimated-usd", default="3.00")
     return result
 
 
@@ -72,7 +80,10 @@ def main(argv=None):
     args = parser().parse_args(argv)
     try:
         if args.command == "init":
-            if args.domain == "composed":
+            if args.domain == "reward":
+                from .reward import write_pack as write_reward
+                destination = write_reward(args.directory)
+            elif args.domain == "composed":
                 from .composed import write_pack as write_composed
                 destination = write_composed(args.directory)
             else:
@@ -95,6 +106,24 @@ def main(argv=None):
                 if session.call({}) != {"ready": True}:
                     raise EngineError("Candidate runner failed its readiness check")
             print(json.dumps(runner.identity, indent=2))
+            return 0
+        if args.command.startswith("reward-"):
+            from .bedrock import BedrockConfig
+            from .reward import open_pack
+            from .reward_study import evaluate_study, prepare, run_study
+            pack = open_pack(args.pack)
+            progress = lambda value: print(json.dumps(value), flush=True)
+            if args.command == "reward-prepare":
+                config = BedrockConfig(**decode(args.bedrock_config.read_bytes()))
+                result = prepare(args.study, pack, runner, config, args.max_estimated_usd)
+                progress({"protocol_id": result["id"], "study": str(args.study)})
+            elif args.command == "reward-run":
+                result = run_study(args.study, pack, runner, progress=progress)
+                progress({"selections_committed": len(result["content"]["selections"])})
+            else:
+                result = evaluate_study(args.study, pack, runner, progress=progress)
+                progress({"summary": str(args.study / "summary.json"), "cost": result["cost"],
+                          "recursive_benefit_established": False})
             return 0
         pack, workload = load_workload(args.pack)
         if args.command.startswith("study-"):
