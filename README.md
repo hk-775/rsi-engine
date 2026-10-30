@@ -13,6 +13,9 @@ engine does not establish recursive advantage or production readiness.
 and acceptance while RSI Engine retains isolated evaluation and experiment
 controls. [Integration and commands](docs/AUTOHELIX.md).
 
+**Start with the article:** [Improving Agents Starts with Verifying the Work](https://hk-775.github.io/hk-775/blog/improving-agents-starts-with-verifying-the-work.html).
+An illustrated explanation of the experiment, its results, and what they support.
+
 **Live AutoHelix reward study:** 48 model calls, $1.53 estimated inference cost.
 With verified feedback, frozen and editable improvers both achieved 120/120
 correct final outcomes in all three runs, including justified handoffs.
