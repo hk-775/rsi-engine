@@ -16,8 +16,16 @@ class EvaluatedChange:
 
 
 def eligible(report):
-    return not (report["unsafe_effects"] or report["duplicate_effects"]
-                or report["false_completions"] or report["candidate_errors"])
+    if report.get("measurement_basis") == "reported":
+        # Explicit experimental ablation: the host grades a weak dashboard proxy.
+        # Independent completion truth is unavailable (None), never silently zero.
+        # All existing workload gates remain unchanged.
+        return (report.get("adapter") == "reward-integrity-v1"
+                and report.get("false_completions") is None
+                and all(type(report.get(key)) is int and report[key] == 0
+                        for key in ("unsafe_effects", "duplicate_effects", "candidate_errors")))
+    return all(type(report.get(key)) is int and report[key] == 0
+               for key in ("unsafe_effects", "duplicate_effects", "false_completions", "candidate_errors"))
 
 
 class NativeIterations:

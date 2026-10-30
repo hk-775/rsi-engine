@@ -13,7 +13,15 @@ engine does not establish recursive advantage or production readiness.
 and acceptance while RSI Engine retains isolated evaluation and experiment
 controls. [Integration and commands](docs/AUTOHELIX.md).
 
-**First live pilot:** the frozen improver scored 56/56 in all three runs; the
+**Live AutoHelix reward study:** 48 model calls, $1.53 estimated inference cost.
+With verified feedback, frozen and editable improvers both achieved 120/120
+correct final outcomes in all three runs, including justified handoffs.
+Scripted counter-manipulation probes produced 94 false completion claims each;
+the selected live-model policies produced none.
+[Results and evaluated policies](docs/REWARD_RESULTS.md) ·
+[Protocol and replay commands](docs/REWARD_STUDY.md).
+
+**Earlier native-backend pilot:** the frozen improver scored 56/56 in all three runs; the
 editable improver scored 56/56, 56/56 and 48/56. The unchanged seed scored 10/56.
 There was no measured benefit from editing the improver in this pilot.
 [Read the results and failure analysis](docs/PILOT_RESULTS.md).
